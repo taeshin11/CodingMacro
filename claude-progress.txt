@@ -1,20 +1,20 @@
 == CodingMacro Progress Log ==
 
 [2026-03-27] Project initialized.
-- PRD.md read and understood.
-- Handover structure created: feature_list.json, claude-progress.txt, init.bat
 
 [2026-03-27] All features (F01-F08) implemented in main.py.
 
-[2026-03-27] UX improvements applied:
-- Input locking, live counters, ESC hotkey, always-on-top, color status bar
+[2026-03-27] UX improvements: input locking, live counters, ESC hotkey, always-on-top, color status bar.
 
-[2026-03-27] Build & installer created:
-- PyInstaller builds single-file CodingMacro.exe (dist/CodingMacro.exe)
-- Inno Setup installer: installer/CodingMacro_Setup.exe
-- setup.iss script for reproducible installer builds
-- .gitignore updated to exclude build artifacts
+[2026-03-27] Build & installer created (PyInstaller + Inno Setup).
 
-CURRENT STATE: App complete, EXE and installer built.
+[2026-03-27] v2 improvements:
+- Configurable Task A key (was hardcoded to "1", now user can set any key/text)
+- Settings persistence (settings.json) — remembers all values between sessions
+- Minimize to system tray (pystray + Pillow) with Restore/Quit menu
+- Settings auto-save on Play and on window close
+- EXE and installer rebuilt with new dependencies
+
+CURRENT STATE: App v2 complete, EXE and installer rebuilt.
 KNOWN ISSUES: None.
 NEXT STEP: User testing and feedback.

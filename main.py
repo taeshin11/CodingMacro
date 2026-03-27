@@ -1,7 +1,7 @@
 """
 CodingMacro - Desktop Macro Application
 Independently schedules two parallel tasks:
-  Task A: Press '1' at a configurable interval
+  Task A: Press a configurable key at a configurable interval
   Task B: Type custom text + Enter at a configurable interval
 """
 
@@ -9,7 +9,39 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 import time
+import json
+import os
+import sys
 import keyboard
+
+
+SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "settings.json")
+
+DEFAULT_SETTINGS = {
+    "task_a_enabled": True,
+    "task_a_key": "1",
+    "task_a_interval": "3",
+    "task_b_enabled": True,
+    "task_b_text": "go on process to make it better",
+    "task_b_interval": "10",
+    "always_on_top": False,
+}
+
+
+def load_settings():
+    try:
+        with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+            saved = json.load(f)
+        # Merge with defaults so new keys are always present
+        merged = {**DEFAULT_SETTINGS, **saved}
+        return merged
+    except (FileNotFoundError, json.JSONDecodeError):
+        return dict(DEFAULT_SETTINGS)
+
+
+def save_settings(data):
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
 class CodingMacroApp:
@@ -17,6 +49,9 @@ class CodingMacroApp:
         self.root = root
         self.root.title("CodingMacro")
         self.root.resizable(False, False)
+
+        # Load saved settings
+        settings = load_settings()
 
         # Shared state
         self.running = False
@@ -26,23 +61,32 @@ class CodingMacroApp:
         self.threads = []
         self.task_a_count = 0
         self.task_b_count = 0
+        self._tray_icon = None
 
         # Track all input widgets so we can disable/enable them
         self._input_widgets = []
 
         # --- Task A Section ---
-        frame_a = ttk.LabelFrame(root, text="Task A - Repeatedly Press '1'", padding=10)
+        frame_a = ttk.LabelFrame(root, text="Task A - Repeatedly Press Key", padding=10)
         frame_a.pack(padx=10, pady=(10, 5), fill="x")
 
-        self.task_a_enabled = tk.BooleanVar(value=True)
+        self.task_a_enabled = tk.BooleanVar(value=settings["task_a_enabled"])
         cb_a = ttk.Checkbutton(frame_a, text="Enable Task A", variable=self.task_a_enabled)
         cb_a.pack(anchor="w")
         self._input_widgets.append(cb_a)
 
+        key_frame = ttk.Frame(frame_a)
+        key_frame.pack(anchor="w", pady=(5, 0))
+        ttk.Label(key_frame, text="Key:").pack(side="left")
+        self.task_a_key = tk.StringVar(value=settings["task_a_key"])
+        entry_a_key = ttk.Entry(key_frame, textvariable=self.task_a_key, width=8)
+        entry_a_key.pack(side="left", padx=5)
+        self._input_widgets.append(entry_a_key)
+
         interval_a_frame = ttk.Frame(frame_a)
         interval_a_frame.pack(anchor="w", pady=(5, 0))
         ttk.Label(interval_a_frame, text="Interval:").pack(side="left")
-        self.task_a_interval = tk.StringVar(value="3")
+        self.task_a_interval = tk.StringVar(value=settings["task_a_interval"])
         entry_a = ttk.Entry(interval_a_frame, textvariable=self.task_a_interval, width=6)
         entry_a.pack(side="left", padx=5)
         self._input_widgets.append(entry_a)
@@ -52,7 +96,7 @@ class CodingMacroApp:
         frame_b = ttk.LabelFrame(root, text="Task B - Custom Text + Enter", padding=10)
         frame_b.pack(padx=10, pady=5, fill="x")
 
-        self.task_b_enabled = tk.BooleanVar(value=True)
+        self.task_b_enabled = tk.BooleanVar(value=settings["task_b_enabled"])
         cb_b = ttk.Checkbutton(frame_b, text="Enable Task B", variable=self.task_b_enabled)
         cb_b.pack(anchor="w")
         self._input_widgets.append(cb_b)
@@ -60,7 +104,7 @@ class CodingMacroApp:
         text_frame = ttk.Frame(frame_b)
         text_frame.pack(anchor="w", fill="x", pady=(5, 0))
         ttk.Label(text_frame, text="Text:").pack(side="left")
-        self.task_b_text = tk.StringVar(value="go on process to make it better")
+        self.task_b_text = tk.StringVar(value=settings["task_b_text"])
         entry_b_text = ttk.Entry(text_frame, textvariable=self.task_b_text, width=40)
         entry_b_text.pack(side="left", padx=5, fill="x", expand=True)
         self._input_widgets.append(entry_b_text)
@@ -68,7 +112,7 @@ class CodingMacroApp:
         interval_b_frame = ttk.Frame(frame_b)
         interval_b_frame.pack(anchor="w", pady=(5, 0))
         ttk.Label(interval_b_frame, text="Interval:").pack(side="left")
-        self.task_b_interval = tk.StringVar(value="10")
+        self.task_b_interval = tk.StringVar(value=settings["task_b_interval"])
         entry_b_int = ttk.Entry(interval_b_frame, textvariable=self.task_b_interval, width=6)
         entry_b_int.pack(side="left", padx=5)
         self._input_widgets.append(entry_b_int)
@@ -87,12 +131,20 @@ class CodingMacroApp:
         self.stop_btn = ttk.Button(btn_frame, text="\u23f9 Stop", command=self.on_stop, state="disabled")
         self.stop_btn.pack(side="left", padx=5)
 
-        # Always-on-top toggle
-        self.on_top_var = tk.BooleanVar(value=False)
+        opts_frame = ttk.Frame(controls_frame)
+        opts_frame.pack(pady=(8, 0))
+
+        self.on_top_var = tk.BooleanVar(value=settings["always_on_top"])
         ttk.Checkbutton(
-            controls_frame, text="Always on top", variable=self.on_top_var,
+            opts_frame, text="Always on top", variable=self.on_top_var,
             command=self._toggle_on_top,
-        ).pack(pady=(8, 0))
+        ).pack(side="left", padx=8)
+
+        ttk.Button(opts_frame, text="Minimize to tray", command=self._minimize_to_tray).pack(side="left", padx=8)
+
+        # Apply saved always-on-top
+        if settings["always_on_top"]:
+            self.root.attributes("-topmost", True)
 
         # Color-coded status bar
         self.status_var = tk.StringVar(value="Ready")
@@ -135,6 +187,9 @@ class CodingMacroApp:
             self._set_status("Invalid interval value!", "#e0e0e0")
             return
 
+        # Save settings on play
+        self._save_current_settings()
+
         # Lock UI inputs
         self._set_inputs_state("disabled")
         self.play_btn.config(state="disabled")
@@ -143,6 +198,9 @@ class CodingMacroApp:
         self.task_a_count = 0
         self.task_b_count = 0
         self.countdown_active = True
+
+        # Capture Task A key now (while UI is still accessible)
+        self._task_a_key_value = self.task_a_key.get()
 
         # Start countdown in a thread so UI stays responsive
         threading.Thread(
@@ -155,7 +213,6 @@ class CodingMacroApp:
         self._stop_tasks()
 
     def _emergency_stop(self):
-        # Can be called from any thread via keyboard hook
         self.root.after(0, self._stop_tasks)
 
     def _stop_tasks(self):
@@ -164,7 +221,6 @@ class CodingMacroApp:
         self.stop_event.set()
         self.running = False
         self.countdown_active = False
-        # Wait briefly for threads to finish
         for t in self.threads:
             t.join(timeout=1)
         self.threads.clear()
@@ -195,8 +251,55 @@ class CodingMacroApp:
         if b_enabled:
             parts.append(f"B: {self.task_b_count}x ({interval_b:.0f}s)")
         self._set_status(" | ".join(parts), "#ccffcc")
-        # Schedule next update
         self.root.after(500, self._update_live_status, a_enabled, b_enabled, interval_a, interval_b)
+
+    # ── Settings ───────────────────────────────────────────────
+
+    def _save_current_settings(self):
+        data = {
+            "task_a_enabled": self.task_a_enabled.get(),
+            "task_a_key": self.task_a_key.get(),
+            "task_a_interval": self.task_a_interval.get(),
+            "task_b_enabled": self.task_b_enabled.get(),
+            "task_b_text": self.task_b_text.get(),
+            "task_b_interval": self.task_b_interval.get(),
+            "always_on_top": self.on_top_var.get(),
+        }
+        save_settings(data)
+
+    # ── System Tray ────────────────────────────────────────────
+
+    def _minimize_to_tray(self):
+        self.root.withdraw()
+        try:
+            import pystray
+            from PIL import Image, ImageDraw
+
+            # Create a simple icon
+            img = Image.new("RGB", (64, 64), color=(50, 150, 50))
+            draw = ImageDraw.Draw(img)
+            draw.rectangle([16, 16, 48, 48], fill=(255, 255, 255))
+            draw.text((22, 20), "M", fill=(50, 150, 50))
+
+            def on_restore(icon, item):
+                icon.stop()
+                self.root.after(0, self.root.deiconify)
+
+            def on_quit(icon, item):
+                icon.stop()
+                self.root.after(0, self._on_close)
+
+            menu = pystray.Menu(
+                pystray.MenuItem("Restore", on_restore, default=True),
+                pystray.MenuItem("Quit", on_quit),
+            )
+            self._tray_icon = pystray.Icon("CodingMacro", img, "CodingMacro", menu)
+            threading.Thread(target=self._tray_icon.run, daemon=True).start()
+
+        except ImportError:
+            # pystray/Pillow not available — just minimize to taskbar instead
+            self.root.iconify()
+            self.root.deiconify()
 
     # ── Countdown ─────────────────────────────────────────────
 
@@ -219,10 +322,8 @@ class CodingMacroApp:
         self.countdown_active = False
         self.running = True
 
-        # Start live status updates on the main thread
         self.root.after(0, self._update_live_status, a_enabled, b_enabled, interval_a, interval_b)
 
-        # Launch task threads
         if a_enabled:
             t = threading.Thread(target=self._task_a_loop, args=(interval_a,), daemon=True)
             self.threads.append(t)
@@ -236,11 +337,12 @@ class CodingMacroApp:
     # ── Task Loops ────────────────────────────────────────────
 
     def _task_a_loop(self, interval):
+        key = self._task_a_key_value
         while not self.stop_event.is_set():
             with self.keystroke_lock:
                 if self.stop_event.is_set():
                     break
-                keyboard.write("1")
+                keyboard.write(key)
                 self.task_a_count += 1
             self._interruptible_sleep(interval)
 
@@ -269,7 +371,10 @@ class CodingMacroApp:
     # ── Cleanup ───────────────────────────────────────────────
 
     def _on_close(self):
+        self._save_current_settings()
         self._stop_tasks()
+        if self._tray_icon:
+            self._tray_icon.stop()
         keyboard.unhook_all()
         self.root.destroy()
 
