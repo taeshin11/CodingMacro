@@ -5,15 +5,15 @@
 - Handover structure created: feature_list.json, claude-progress.txt, init.bat
 
 [2026-03-27] All features (F01-F08) implemented in main.py.
-- Task A UI: checkbox + interval input
-- Task B UI: checkbox + custom text input + interval input
-- Global controls: Play/Stop buttons + status bar
-- Multi-threaded execution with separate threads for Task A and Task B
-- Mutex lock (threading.Lock) for anti-collision between keystrokes
-- 5-second countdown delay before macros fire
-- F12 global emergency stop hotkey
-- QA review: fixed potential negative sleep ValueError in _interruptible_sleep
 
-CURRENT STATE: All 8 features completed. App is functional.
+[2026-03-27] UX improvements applied:
+- Inputs (checkboxes, entries) disabled while running to prevent mid-execution changes
+- Live execution counters in status bar (A: 5x | B: 2x)
+- ESC added as additional emergency stop hotkey (alongside F12)
+- Always-on-top toggle checkbox
+- Color-coded status bar: gray=ready, yellow=countdown, green=running, red=stopped
+- Guard in _stop_tasks to prevent double-stop issues
+
+CURRENT STATE: All features complete + UX polish applied.
 KNOWN ISSUES: None.
 NEXT STEP: User testing and feedback.
