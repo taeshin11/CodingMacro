@@ -1,0 +1,52 @@
+{
+  "features": [
+    {
+      "id": "F01",
+      "name": "Project scaffolding and dependencies",
+      "description": "Create main.py, requirements.txt, and basic app entry point with tkinter window",
+      "status": "completed"
+    },
+    {
+      "id": "F02",
+      "name": "Task A UI section",
+      "description": "Enable checkbox and interval input for Task A (press '1')",
+      "status": "completed"
+    },
+    {
+      "id": "F03",
+      "name": "Task B UI section",
+      "description": "Enable checkbox, custom text input, and interval input for Task B (type text + Enter)",
+      "status": "completed"
+    },
+    {
+      "id": "F04",
+      "name": "Global controls UI",
+      "description": "Play button, Stop button, and real-time status bar",
+      "status": "completed"
+    },
+    {
+      "id": "F05",
+      "name": "Multi-threaded task execution",
+      "description": "Task A and Task B run on separate threads with independent intervals",
+      "status": "completed"
+    },
+    {
+      "id": "F06",
+      "name": "Anti-collision mutex lock",
+      "description": "Threading lock to prevent keystroke collision between Task A and Task B",
+      "status": "completed"
+    },
+    {
+      "id": "F07",
+      "name": "5-second countdown delay",
+      "description": "Countdown timer before first macro fires after clicking Play",
+      "status": "completed"
+    },
+    {
+      "id": "F08",
+      "name": "Global emergency stop hotkey",
+      "description": "F12 or ESC global hotkey to force-stop all threads immediately",
+      "status": "completed"
+    }
+  ]
+}

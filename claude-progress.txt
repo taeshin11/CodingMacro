@@ -1,0 +1,19 @@
+== CodingMacro Progress Log ==
+
+[2026-03-27] Project initialized.
+- PRD.md read and understood.
+- Handover structure created: feature_list.json, claude-progress.txt, init.bat
+
+[2026-03-27] All features (F01-F08) implemented in main.py.
+- Task A UI: checkbox + interval input
+- Task B UI: checkbox + custom text input + interval input
+- Global controls: Play/Stop buttons + status bar
+- Multi-threaded execution with separate threads for Task A and Task B
+- Mutex lock (threading.Lock) for anti-collision between keystrokes
+- 5-second countdown delay before macros fire
+- F12 global emergency stop hotkey
+- QA review: fixed potential negative sleep ValueError in _interruptible_sleep
+
+CURRENT STATE: All 8 features completed. App is functional.
+KNOWN ISSUES: None.
+NEXT STEP: User testing and feedback.
