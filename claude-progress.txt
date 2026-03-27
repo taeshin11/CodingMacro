@@ -7,13 +7,14 @@
 [2026-03-27] All features (F01-F08) implemented in main.py.
 
 [2026-03-27] UX improvements applied:
-- Inputs (checkboxes, entries) disabled while running to prevent mid-execution changes
-- Live execution counters in status bar (A: 5x | B: 2x)
-- ESC added as additional emergency stop hotkey (alongside F12)
-- Always-on-top toggle checkbox
-- Color-coded status bar: gray=ready, yellow=countdown, green=running, red=stopped
-- Guard in _stop_tasks to prevent double-stop issues
+- Input locking, live counters, ESC hotkey, always-on-top, color status bar
 
-CURRENT STATE: All features complete + UX polish applied.
+[2026-03-27] Build & installer created:
+- PyInstaller builds single-file CodingMacro.exe (dist/CodingMacro.exe)
+- Inno Setup installer: installer/CodingMacro_Setup.exe
+- setup.iss script for reproducible installer builds
+- .gitignore updated to exclude build artifacts
+
+CURRENT STATE: App complete, EXE and installer built.
 KNOWN ISSUES: None.
 NEXT STEP: User testing and feedback.
