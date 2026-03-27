@@ -371,12 +371,24 @@ class CodingMacroApp:
     # ── Cleanup ───────────────────────────────────────────────
 
     def _on_close(self):
-        self._save_current_settings()
-        self._stop_tasks()
-        if self._tray_icon:
-            self._tray_icon.stop()
-        keyboard.unhook_all()
+        try:
+            self._save_current_settings()
+        except Exception:
+            pass
+        self.stop_event.set()
+        self.running = False
+        self.countdown_active = False
+        try:
+            keyboard.unhook_all()
+        except Exception:
+            pass
+        try:
+            if self._tray_icon:
+                self._tray_icon.stop()
+        except Exception:
+            pass
         self.root.destroy()
+        os._exit(0)
 
 
 def main():
